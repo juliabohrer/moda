@@ -1,0 +1,41 @@
+CREATE DATABASE moda;
+USE moda;
+
+
+CREATE TABLE usuario (
+id INT AUTO_INCREMENT PRIMARY KEY,
+nome VARCHAR(100) NOT NULL,
+telefone VARCHAR(20) NOT NULL,
+email VARCHAR(100) NOT NULL,
+login VARCHAR(50) UNIQUE NOT NULL,
+senha VARCHAR(255) NOT NULL
+);
+
+
+CREATE TABLE categoria (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    descricao VARCHAR(255) NOT NULL,
+    cor VARCHAR(50) NOT NULL
+    
+);
+
+
+CREATE TABLE post (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    conteudo TEXT NOT NULL,
+    imagem VARCHAR(255) NOT NULL,
+    autor VARCHAR(50) NOT NULL
+
+);
+
+CREATE TABLE produtos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    preco DECIMAL(10,2) NOT NULL,
+    estoque INT NOT NULL,
+    tamanho VARCHAR(10),
+    cor VARCHAR(50),
+    imagem VARCHAR(255)
+);
