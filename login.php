@@ -1,59 +1,43 @@
 <?php
 session_start();
-include __DIR__ . '/admin/db.class.php'; // conexão com o banco
+include __DIR__ . '/admin/db.class.php';
 
-$db = new DB('usuarios'); // tabela do banco
+$db = new DB('usuario'); 
 $erro = '';
-$data = null;
 
 if (!empty($_POST)) {
-    try {
-        $login = trim($_POST['login'] ?? '');
-        $senha = trim($_POST['senha'] ?? '');
 
-        $errors = [];
+    $login = trim($_POST['login'] ?? '');
+    $senha = trim($_POST['senha'] ?? '');
 
-        if (empty($login)) {
-            $errors[] = 'O login é obrigatório';
-        }
+    if (empty($login) || empty($senha)) {
+        $erro = 'Preencha todos os campos.';
+    } else {
+        $result = $db->login($login, $senha);
 
-        if (empty($senha)) {
-            $errors[] = 'A senha é obrigatória';
-        }
+        if ($result) {
+            $_SESSION['user'] = $result->login;
+            $_SESSION['nome'] = $result->nome;
+            $_SESSION['id'] = $result->id;
 
-        if (empty($errors)) {
-            $result = $db->login($_POST);
-
-            if ($result !== 'error') {
-                $_SESSION['usuario_id'] = $result->id;
-                $_SESSION['login'] = $result->login;
-                $_SESSION['nome'] = $result->nome;
-
-                echo '<div class="alert">Login realizado com sucesso!</div>';
-                echo "<script>
-                    setTimeout(() => window.location.href = 'main.php', 2000);
-                </script>";
-            } else {
-                $erro = 'Login ou senha incorretos!';
-            }
+            header("Location: home.php");
+            exit;
         } else {
-            $erro = implode('<br>', $errors);
+            $erro = 'Login ou senha incorretos!';
         }
-    } catch (Exception $e) {
-        $erro = 'Ocorreu um erro: ' . $e->getMessage();
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Login - Site Moda</title>
+<title>Login</title>
+
 <style>
 body {
     font-family: Arial, sans-serif;
-    background-color: #fff0f5; /* rosa clarinho */
+    background-color: #fff0f5;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -72,7 +56,7 @@ body {
 
 .form-box h2 {
     margin-bottom: 20px;
-    color: #ff69b4; /* rosa */
+    color: #ff69b4;
 }
 
 .form-box label {
@@ -96,7 +80,7 @@ body {
     width: 100%;
     padding: 12px;
     margin-top: 20px;
-    background-color: #ff69b4; /* rosa */
+    background-color: #ff69b4;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -115,16 +99,8 @@ body {
     margin-bottom: 15px;
     border-radius: 6px;
 }
-
-.form-box p a {
-    color: #ff69b4;
-    text-decoration: none;
-}
-
-.form-box p a:hover {
-    text-decoration: underline;
-}
 </style>
+
 </head>
 <body>
 
@@ -137,15 +113,15 @@ body {
 
     <form action="" method="post">
         <label>Login</label>
-        <input type="text" name="login" value="<?= htmlspecialchars($_POST['login'] ?? '') ?>" required>
+        <input type="text" name="login">
 
         <label>Senha</label>
-        <input type="password" name="senha" required>
+        <input type="password" name="senha">
 
         <button type="submit">Entrar</button>
     </form>
 
-    <p><a href="UsuarioForm.php">Criar um novo usuário</a></p>
+    <p><a href="register.php">Criar nova conta</a></p>
 </div>
 
 </body>

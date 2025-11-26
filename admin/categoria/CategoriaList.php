@@ -2,10 +2,8 @@
 require_once __DIR__ . '/../db.class.php';
 $db = new DB('categoria');
 
-// Busca
 $termo = $_GET['busca'] ?? '';
 
-// Query com busca
 $sql = "SELECT * FROM categoria 
         WHERE nome LIKE :busca 
         ORDER BY id DESC";
@@ -16,7 +14,6 @@ $stmt->execute();
 
 $categorias = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-// Deletar
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
 
@@ -32,20 +29,20 @@ include __DIR__ . '/../header.php';
 
 <h2>Categorias</h2>
 
-<form method="GET">
-    <input type="text" name="busca" placeholder="Buscar categoria..." value="<?= $termo ?>">
-    <button type="submit">Buscar</button>
+<form method="GET" class="mb-3">
+    <input type="text" name="busca" placeholder="Buscar categoria..." 
+           class="form-control" value="<?= $termo ?>">
 </form>
 
-<a href="CategoriaForm.php" class="btn btn-primary">Cadastrar Nova Categoria</a>
+<a href="CategoriaForm.php" class="btn btn-primary mb-3">Cadastrar Nova Categoria</a>
 
 <table class="table table-striped mt-3">
     <thead>
         <tr>
             <th>ID</th>
-            <th>Nome</th>
+            <th>Coleção</th>
             <th>Descrição</th>
-            <th>Cor</th>
+            <th>Estação</th>
             <th>Ações</th>
         </tr>
     </thead>
@@ -56,10 +53,14 @@ include __DIR__ . '/../header.php';
                 <td><?= $c->id ?></td>
                 <td><?= $c->nome ?></td>
                 <td><?= $c->descricao ?></td>
-                <td><span style="background:<?= $c->cor ?>; padding:5px 15px; border-radius:5px;"></span></td>
+                <td><?= $c->estacao ?></td> 
+
                 <td>
-                    <a href="CategoriaForm.php?id=<?= $c->id ?>" class="btn btn-warning btn-sm">Editar</a>
-                    <a href="CategoriaList.php?delete=<?= $c->id ?>" class="btn btn-danger btn-sm"
+                    <a href="CategoriaForm.php?id=<?= $c->id ?>" 
+                       class="btn btn-warning btn-sm">Editar</a>
+
+                    <a href="CategoriaList.php?delete=<?= $c->id ?>" 
+                       class="btn btn-danger btn-sm"
                        onclick="return confirm('Deseja realmente deletar?');">
                        Deletar
                     </a>

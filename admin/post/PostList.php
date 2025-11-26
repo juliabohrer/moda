@@ -1,18 +1,28 @@
 <?php
-require_once __DIR__ . '/../db.class.php';
-include '../header.php';
+include __DIR__ . '/../db.class.php';
+include __DIR__ . '/../header.php';
 
 $db = new DB('post');
 
 $busca = $_GET['busca'] ?? '';
 $where = "";
 
-// FILTRO
 if (!empty($busca)) {
+    $busca = trim($busca);
     $where = " WHERE titulo LIKE '%$busca%' OR autor LIKE '%$busca%' ";
 }
 
-// BUSCA OS POSTS
+if (!empty($_POST['delete_id'])) {
+    $id = intval($_POST['delete_id']);
+
+    try {
+        $db->delete($id);
+        echo "<div class='alert alert-success'>Post excluído com sucesso!</div>";
+    } catch (Exception $e) {
+        echo "<div class='alert alert-danger'>Erro ao excluir: " . $e->getMessage() . "</div>";
+    }
+}
+
 try {
     $sql = $db->connect()->query("SELECT * FROM post $where ORDER BY id DESC");
     $posts = $sql->fetchAll(PDO::FETCH_OBJ);
@@ -22,7 +32,7 @@ try {
 }
 ?>
 
-<h3 class="mb-4">Lista de Posts</h3>
+<h3 class="mb-4">Postagens</h3>
 
 <a href="PostForm.php" class="btn btn-primary mb-3">+ Novo Post</a>
 
@@ -36,6 +46,7 @@ try {
             <th>ID</th>
             <th>Título</th>
             <th>Autor</th>
+            <th>Conteúdo</th>
             <th>Imagem</th>
             <th>Ações</th>
         </tr>
@@ -47,10 +58,11 @@ try {
                     <td><?= $p->id ?></td>
                     <td><?= $p->titulo ?></td>
                     <td><?= $p->autor ?></td>
+                    <td><?= mb_strimwidth($p->conteudo, 0, 200, "...") ?></td>
 
                     <td>
                         <?php if (!empty($p->imagem)): ?>
-                            <img src="<?= $p->imagem ?>" width="70">
+                            <img src="../uploadspost/<?= $p->imagem ?>" width="80" style="border-radius:5px;">
                         <?php else: ?>
                             -
                         <?php endif; ?>
@@ -59,18 +71,17 @@ try {
                     <td>
                         <a href="PostForm.php?id=<?= $p->id ?>" class="btn btn-warning btn-sm">Editar</a>
 
-                        <a href="PostDelete.php?id=<?= $p->id ?>" 
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Deseja excluir este post?')">
-                            Excluir
-                        </a>
+                        <form action="" method="POST" style="display:inline-block;"
+                              onsubmit="return confirm('Tem certeza que deseja excluir este post?');">
+                            <input type="hidden" name="delete_id" value="<?= $p->id ?>">
+                            <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                        </form>
                     </td>
                 </tr>
             <?php endforeach; ?>
-
         <?php else: ?>
             <tr>
-                <td colspan="5">Nenhum post encontrado.</td>
+                <td colspan="6">Nenhum post encontrado.</td>
             </tr>
         <?php endif; ?>
     </tbody>

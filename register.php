@@ -2,7 +2,7 @@
 session_start();
 require_once __DIR__ . '/admin/db.class.php';
 
-$db = new DB('usuario'); // tabela do banco
+$db = new DB('usuario'); 
 $msg = '';
 
 if(isset($_POST['register'])){
@@ -25,7 +25,7 @@ if(isset($_POST['register'])){
                 $telefone,
                 $email,
                 $login,
-                $senha // senha sem hash
+                $senha 
             ]);
 
             $msg = "Cadastro realizado com sucesso!";
@@ -48,7 +48,7 @@ if(isset($_POST['register'])){
 <style>
 body {
     font-family: Arial, sans-serif;
-    background-color: #fff0f5; /* rosa clarinho */
+    background-color: #fff0f5; 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -67,7 +67,7 @@ body {
 
 .form-box h2 {
     margin-bottom: 20px;
-    color: #ff69b4; /* rosa */
+    color: #ff69b4; 
 }
 
 .form-box label {

@@ -1,19 +1,20 @@
 <?php
 include '../header.php';
-include '../db.class.php';
+require_once '../db.class.php';
 
-// CORRIGIDO — a tabela certa é "produtos"
 $db = new DB('produtos');
 
 $produto = null;
 $msg = "";
 
-// EDITAR
 if (!empty($_GET['id'])) {
     $produto = $db->find($_GET['id']);
 }
 
-// SALVAR
+function valor($campo, $produto) {
+    return $_POST[$campo] ?? ($produto->$campo ?? '');
+}
+
 if (!empty($_POST)) {
 
     $id = $_POST['id'] ?? null;
@@ -24,23 +25,16 @@ if (!empty($_POST)) {
     $tamanho = trim($_POST['tamanho']);
     $cor = trim($_POST['cor']);
 
-    // Upload de imagem
     $imagem = $produto->imagem ?? '';
 
     if (!empty($_FILES['imagem']['name'])) {
-
-        // cria nome único
         $nomeArquivo = time() . "_" . $_FILES['imagem']['name'];
-
-        // move o arquivo para uploads
         move_uploaded_file($_FILES['imagem']['tmp_name'], "../uploads/" . $nomeArquivo);
-
         $imagem = $nomeArquivo;
     }
 
-    // validação
     if (!$nome || !$preco || !$estoque) {
-        $msg = "Preencha os campos obrigatórios: Nome, Preço e Estoque!";
+        $msg = "Preencha Nome, Preço e Estoque!";
     } else {
 
         $dados = [
@@ -59,48 +53,61 @@ if (!empty($_POST)) {
             $db->update($id, $dados);
             $msg = "Produto atualizado!";
         }
+
+        $produto = (object)$dados;
+        $produto->id = $id;
     }
 }
 ?>
 
-<h2><?= empty($_GET['id']) ? "Cadastrar Produto" : "Editar Produto" ?></h2>
+<h2 class="mt-3">
+    <?= empty($_GET['id']) ? "Cadastrar Produto" : "Editar Produto" ?>
+</h2>
 
 <p style="color: green; font-weight:bold;"><?= $msg ?></p>
 
-<form method="POST" enctype="multipart/form-data">
+<form method="POST" enctype="multipart/form-data" class="mt-3">
 
     <input type="hidden" name="id" value="<?= $produto->id ?? '' ?>">
 
     <label>Nome:</label>
-    <input type="text" class="form-control" name="nome"
-           value="<?= $produto->nome ?? '' ?>" required>
+    <input type="text" class="form-control" name="nome" value="<?= valor('nome', $produto) ?>" required>
 
-    <label>Preço:</label>
+    <label class="mt-3">Preço:</label>
     <input type="number" step="0.01" class="form-control" name="preco"
-           value="<?= $produto->preco ?? '' ?>" required>
+           value="<?= valor('preco', $produto) ?>" required>
 
-    <label>Estoque:</label>
+    <label class="mt-3">Estoque:</label>
     <input type="number" class="form-control" name="estoque"
-           value="<?= $produto->estoque ?? '' ?>" required>
+           value="<?= valor('estoque', $produto) ?>" required>
 
-    <label>Tamanho:</label>
+    <label class="mt-3">Tamanho:</label>
     <input type="text" class="form-control" name="tamanho"
-           value="<?= $produto->tamanho ?? '' ?>">
+           value="<?= valor('tamanho', $produto) ?>">
 
-    <label>Cor:</label>
+    <label class="mt-3">Cor:</label>
     <input type="text" class="form-control" name="cor"
-           value="<?= $produto->cor ?? '' ?>">
+           value="<?= valor('cor', $produto) ?>">
 
-    <label>Imagem:</label>
+    <label class="mt-3">Imagem:</label>
     <input type="file" class="form-control" name="imagem">
 
     <?php if (!empty($produto->imagem)): ?>
-        <br>
-        <img src="../uploads/<?= $produto->imagem ?>" width="120">
+        <div class="mt-3">
+            <p>Imagem atual:</p>
+            <img src="../uploads/<?= $produto->imagem ?>" width="150" style="border-radius:8px; border:1px solid #ccc;">
+        </div>
     <?php endif; ?>
 
-    <br>
-    <button class="btn btn-success">Salvar</button>
+    <div class="row mt-4 mb-5">
+        <div class="col-6">
+            <button class="btn btn-success w-100">Salvar</button>
+        </div>
+        <div class="col-6">
+            <a href="ProdutosList.php" class="btn btn-secondary w-100">Voltar</a>
+        </div>
+    </div>
+
 </form>
 
 <?php include '../footer.php'; ?>

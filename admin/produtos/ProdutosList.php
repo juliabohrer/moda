@@ -1,11 +1,9 @@
 <?php
-require_once __DIR__ . '/../db.class.php';
+include '../db.class.php';
 $db = new DB('produtos');
 
-// Busca
 $busca = $_GET['busca'] ?? '';
 
-// Query com busca
 $sql = "SELECT * FROM produtos";
 
 if (!empty($busca)) {
@@ -23,7 +21,6 @@ if (!empty($busca)) {
 $stmt->execute();
 $produtos = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-// DELETE — igualzinho ao das categorias
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
 
@@ -34,10 +31,10 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
-include __DIR__ . '/../header.php';
+include '../header.php';
 ?>
 
-<h2>Produtos</h2>
+<h2 class="mt-3">Produtos</h2>
 
 <form method="GET" class="mb-3">
     <input type="text" name="busca" class="form-control" placeholder="Buscar produto..." value="<?= $busca ?>">
@@ -65,30 +62,30 @@ include __DIR__ . '/../header.php';
                     <td><?= $p->nome ?></td>
                     <td>R$ <?= number_format($p->preco, 2, ',', '.') ?></td>
                     <td><?= $p->estoque ?></td>
+
                     <td>
                         <?php if (!empty($p->imagem)): ?>
-                            <img src="../uploads/<?= $p->imagem ?>" width="60">
+                            <img src="../uploads/<?= $p->imagem ?>" width="70" class="img-thumbnail">
                         <?php else: ?>
                             -
                         <?php endif; ?>
                     </td>
+
                     <td>
                         <a href="ProdutosForm.php?id=<?= $p->id ?>" class="btn btn-warning btn-sm">Editar</a>
 
-                        <a href="ProdutosList.php?delete=<?= $p->id ?>"
+                        <a href="?delete=<?= $p->id ?>" 
                            class="btn btn-danger btn-sm"
-                           onclick="return confirm('Deseja realmente deletar este produto?');">
+                           onclick="return confirm('Deseja realmente deletar?');">
                            Deletar
                         </a>
                     </td>
                 </tr>
             <?php endforeach; ?>
         <?php else: ?>
-            <tr>
-                <td colspan="6" class="text-center">Nenhum produto encontrado.</td>
-            </tr>
+            <tr><td colspan="6" class="text-center">Nenhum produto encontrado.</td></tr>
         <?php endif; ?>
     </tbody>
 </table>
 
-<?php include __DIR__ . '/../footer.php'; ?>
+<?php include '../footer.php'; ?>

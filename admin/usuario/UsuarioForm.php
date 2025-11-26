@@ -1,93 +1,122 @@
 <?php
-// site/admin/usuario/UsuarioForm.php
 session_start();
 if (empty($_SESSION['user'])) {
-    header('Location: ../../index.php');
+    header('Location: ../../login.php');
     exit;
 }
-require_once __DIR__ . '/../db.class.php';
-$db = new DB();
 
-$edit = false;
-$errors = [];
+include '../header.php';
+include '/../db.class.php';
 
-if (isset($_GET['id'])) {
-    $edit = true;
-    $id = (int)$_GET['id'];
-    $stmt = $db->pdo->prepare("SELECT * FROM usuario WHERE id = :id");
-    $stmt->execute(['id'=>$id]);
-    $row = $stmt->fetch();
-    if (!$row) { exit('Usuário não encontrado'); }
+$db = new DB('usuario');
+
+$usuario = null;
+$msg = "";
+
+if (!empty($_GET['id'])) {
+    $usuario = $db->find($_GET['id']);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = trim($_POST['nome'] ?? '');
-    $telefone = trim($_POST['telefone'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $login = trim($_POST['login'] ?? '');
-    $senha = $_POST['senha'] ?? '';
+function valor($campo, $usuario) {
+    return $_POST[$campo] ?? ($usuario->$campo ?? '');
+}
 
-    if (!$nome) $errors[] = "Nome obrigatório.";
-    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Email inválido.";
-    if (!$login) $errors[] = "Login obrigatório.";
+if (!empty($_POST)) {
 
-    // editar ou criar
-    if (empty($errors)) {
-        if ($edit) {
-            // se senha preenchida, atualiza
-            if ($senha) {
-                $hash = password_hash($senha, PASSWORD_DEFAULT);
-                $stmt = $db->pdo->prepare("UPDATE usuario SET nome_usuario=:nome, telefone=:telefone, email=:email, login=:login, senha=:senha WHERE id=:id");
-                $stmt->execute(['nome'=>$nome,'telefone'=>$telefone,'email'=>$email,'login'=>$login,'senha'=>$hash,'id'=>$id]);
+    $id = $_POST['id'] ?? null;
+
+    $nome     = trim($_POST['nome']);
+    $telefone = trim($_POST['telefone']);
+    $email    = trim($_POST['email']);
+    $login    = trim($_POST['login']);
+    $senha    = trim($_POST['senha']);
+
+    if (!$nome || !$telefone || !$email || !$login) {
+        $msg = "Preencha todos os campos obrigatórios!";
+    } else {
+
+        $dados = [
+            "nome" => $nome,
+            "telefone" => $telefone,
+            "email" => $email,
+            "login" => $login
+        ];
+
+        if (empty($id)) {
+
+            if (!$senha) {
+                $msg = "Digite uma senha para criar o usuário!";
             } else {
-                $stmt = $db->pdo->prepare("UPDATE usuario SET nome_usuario=:nome, telefone=:telefone, email=:email, login=:login WHERE id=:id");
-                $stmt->execute(['nome'=>$nome,'telefone'=>$telefone,'email'=>$email,'login'=>$login,'id'=>$id]);
-            }
-            header('Location: UsuarioList.php');
-            exit;
-        } else {
-            if (strlen($senha) < 6) $errors[] = "Senha mínimo 6 chars.";
-            else {
-                $hash = password_hash($senha, PASSWORD_DEFAULT);
-                $stmt = $db->pdo->prepare("INSERT INTO usuario (nome_usuario, telefone, email, login, senha) VALUES (:nome,:telefone,:email,:login,:senha)");
-                $stmt->execute(['nome'=>$nome,'telefone'=>$telefone,'email'=>$email,'login'=>$login,'senha'=>$hash]);
-                header('Location: UsuarioList.php');
+                $dados["senha"] = $senha;
+                $db->insert($dados);
+
+                header("Location: UsuarioList.php");
                 exit;
             }
+
+        } else {
+            $db->update($id, $dados);
+
+            if (!empty($senha)) {
+                $db->update($id, ["senha" => $senha]);
+            }
+
+            header("Location: UsuarioList.php");
+            exit;
         }
+
+        $usuario = (object)$dados;
+        $usuario->id = $id;
     }
 }
-
-include __DIR__ . '/../../header.php';
 ?>
-<div class="row">
-  <div class="col-md-8">
-    <h4><?= $edit ? 'Editar Usuário' : 'Novo Usuário' ?></h4>
-    <?php if($errors): ?><div class="alert alert-danger"><?= implode('<br>', array_map('htmlspecialchars',$errors)) ?></div><?php endif; ?>
-    <form method="post" novalidate>
-      <div class="mb-3">
-        <label>Nome</label>
-        <input name="nome" class="form-control" value="<?= htmlspecialchars($row['nome_usuario'] ?? $_POST['nome'] ?? '') ?>" required>
-      </div>
-      <div class="mb-3">
-        <label>Telefone</label>
-        <input name="telefone" class="form-control" value="<?= htmlspecialchars($row['telefone'] ?? $_POST['telefone'] ?? '') ?>">
-      </div>
-      <div class="mb-3">
-        <label>Email</label>
-        <input name="email" type="email" class="form-control" value="<?= htmlspecialchars($row['email'] ?? $_POST['email'] ?? '') ?>" required>
-      </div>
-      <div class="mb-3">
-        <label>Login</label>
-        <input name="login" class="form-control" value="<?= htmlspecialchars($row['login'] ?? $_POST['login'] ?? '') ?>" required>
-      </div>
-      <div class="mb-3">
-        <label>Senha <?= $edit ? '(preencha apenas para alterar)' : '' ?></label>
-        <input name="senha" type="password" class="form-control">
-      </div>
-      <button class="btn btn-rosa"><?= $edit ? 'Atualizar' : 'Criar' ?></button>
-      <a href="UsuarioList.php" class="btn btn-outline-secondary">Cancelar</a>
-    </form>
-  </div>
-</div>
-<?php include __DIR__ . '/../../footer.php'; ?>
+
+<h2 class="mt-3">
+    <?= empty($_GET['id']) ? "Novo Usuário" : "Editar Usuário" ?>
+</h2>
+
+<p style="color:red; font-weight:bold;"><?= $msg ?></p>
+
+<form method="POST" class="row g-3 mt-3">
+
+    <input type="hidden" name="id" value="<?= $usuario->id ?? '' ?>">
+
+    <div class="col-md-6">
+        <label class="form-label"><strong>Nome</strong></label>
+        <input type="text" name="nome" class="form-control"
+               value="<?= valor('nome', $usuario) ?>" required>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label"><strong>Telefone</strong></label>
+        <input type="text" name="telefone" class="form-control"
+               value="<?= valor('telefone', $usuario) ?>" required>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label"><strong>Email</strong></label>
+        <input type="email" name="email" class="form-control"
+               value="<?= valor('email', $usuario) ?>" required>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label"><strong>Login</strong></label>
+        <input type="text" name="login" class="form-control"
+               value="<?= valor('login', $usuario) ?>" required>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">
+            <strong>Senha <?= !empty($_GET['id']) ? "(opcional)" : "" ?></strong>
+        </label>
+        <input type="password" name="senha" class="form-control">
+    </div>
+
+    <div class="col-12 mt-4 mb-5">
+        <button class="btn btn-success">Salvar</button>
+        <a href="UsuarioList.php" class="btn btn-secondary">Voltar</a>
+    </div>
+
+</form>
+
+<?php include '../footer.php'; ?>
